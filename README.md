@@ -1,6 +1,12 @@
 # Serverless Slack bot
 
-## requirements
+## Requirements
 
 - Serverless
 - docker
+
+## Deploy
+
+```
+sls deploy
+```
