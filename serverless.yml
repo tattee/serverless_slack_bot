@@ -1,0 +1,45 @@
+service: lambda-api
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: python3.8
+  region: ap-northeast-1
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - s3:ListBucket
+        - s3:GetObject
+        - logs:CreateLogGroup
+        - logs:CreateLogStream
+        - logs:PutLogEvents
+      Resource:
+        - "arn:aws:s3::*"
+
+functions:
+  slack_bot:
+    handler: handler.handler
+    memorySize: 2048
+    timeout: 60
+    environment: ${self:custom.environment.${self:provider.stage}}
+    events:
+      - http:
+          path: api/lambda-api
+          method: post
+      - schedule:
+          name: periodic_execution_5min # コールドスタート対策として，5分ごとにCloudWatchでアクセス
+          description: 'periodic_execution'
+          rate: rate(5 minutes)
+          input: '{"cron":"cron"}'
+          enabled: true
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  defaultStage: dev
+  environment:
+    dev: ${file(env/.dev.yml)}
+
+  pythonRequirements:
+    dockerizePip: true
